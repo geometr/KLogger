@@ -366,18 +366,19 @@ class KLogger
             
             $debugBacktrace = debug_backtrace();
             
-            while ( isset($debugBacktrace[0]) && $debugBacktrace[0]['class'] == 'KLogger' ) {
+            /*while ( isset($debugBacktrace[0]) && $debugBacktrace[0]['class'] == 'KLogger' ) {
                 $last  = array_shift($debugBacktrace);
-            }   
+            } */
 
             if ( count($debugBacktrace) ) {
-                $info  = array_shift($debugBacktrace);
-            
+
+                $info  = array_pop($debugBacktrace);
+                
                 $class     = isset( $info['class'] )    ? $info['class']    : NULL;
                 $function  = isset( $info['function'] ) ? $info['function'] : NULL;
                 $file      = basename($info['file']);
             
-                $code_line = $last['line'];
+                $code_line = $info['line'];
             
                 $line = "$status [$function()] $line [ $file:$code_line ] $line";
             }else{
