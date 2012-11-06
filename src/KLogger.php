@@ -363,23 +363,27 @@ class KLogger
     {
         if ($this->_severityThreshold >= $severity) {
             $status = $this->_getTimeLine($severity);
+            
             $debugBacktrace = debug_backtrace();
-            while ( $debugBacktrace[0]['class'] == 'KLogger' ) {
+            
+            while ( isset($debugBacktrace[0]) && $debugBacktrace[0]['class'] == 'KLogger' ) {
                 $last  = array_shift($debugBacktrace);
             }   
 
             if ( count($debugBacktrace) ) {
                 $info  = array_shift($debugBacktrace);
+            
+                $class     = isset( $info['class'] )    ? $info['class']    : NULL;
+                $function  = isset( $info['function'] ) ? $info['function'] : NULL;
+                $file      = basename($info['file']);
+            
+                $code_line = $last['line'];
+            
+                $line = "$status [$function()] $line [ $file:$code_line ] $line";
+            }else{
+                $line = "$status $line";
             }   
      
-            $class     = isset( $info['class'] )    ? $info['class']    : NULL;
-            $function  = isset( $info['function'] ) ? $info['function'] : NULL;
-            $file      = basename($info['file']);
-            
-            $code_line = $last['line'];
-            
-            $line = "$status [$function()] $line [ $file:$code_line ] $line";
-            
             if($args !== self::NO_ARGUMENTS) {
                 /* Print the passed object value */
                 $line .= '; ' . var_export($args, true);
