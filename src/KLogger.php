@@ -366,7 +366,7 @@ class KLogger
             
             $debugBacktrace = debug_backtrace();
             
-            while ( isset($debugBacktrace[0]) && $debugBacktrace[0]['class'] == 'KLogger' ) {
+            while ( isset($debugBacktrace[0])&& isset($debugBacktrace[0]['class']) && $debugBacktrace[0]['class'] == 'KLogger' ) {
                 $last  = array_shift($debugBacktrace);
             } 
 
