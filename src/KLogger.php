@@ -379,7 +379,7 @@ class KLogger
                 $file      = basename($info['file']);
             
                 $code_line = $last['line'];
-                $line = "$status [$file:$code_line:$class".(($class=="NULL")?"":"->")."$function ] $line";            
+                $line = "$status [$file:$code_line:$class".(($class==NULL)?"":"->")."$function() ] $line";            
             }else{
                 $line = "$status $line";
             }   
