@@ -86,6 +86,12 @@ class KLogger
      */
     private $_fileHandle        = null;
 
+     /**
+     * This holds the max size  that the file should not cross.
+     * @var resource
+     */
+    private $_maxFileSize       = 100000000;
+     
     /**
      * Standard messages produced by the class. Can be modified for il8n
      * @var array
@@ -140,7 +146,7 @@ class KLogger
             }
         }
 
-        if (in_array($logDirectory, self::$instances)) {
+        if (in_array($logDirectory, array_keys(self::$instances))) {
             return self::$instances[$logDirectory];
         }
 
@@ -164,12 +170,17 @@ class KLogger
             return;
         }
 
-        $this->_logFilePath = $logDirectory
-            . DIRECTORY_SEPARATOR
-            . 'log_'
-            . date('Y-m-d')
-            . '.txt';
-
+        $FileNo = 0;
+        while($this->_logFilePath == null || (file_exists($this->_logFilePath) && filesize($this->_logFilePath) > $this->_maxFileSize))  
+        {
+            $this->_logFilePath = $logDirectory
+                . DIRECTORY_SEPARATOR
+                . 'log_'
+                . date('Y-m-d-')
+                . $FileNo
+                . '.txt';
+        }
+        
         $this->_severityThreshold = $severity;
         if (!file_exists($logDirectory)) {
             mkdir($logDirectory, self::$_defaultPermissions, true);
@@ -181,7 +192,7 @@ class KLogger
             return;
         }
 
-        if (($this->_fileHandle = fopen($this->_logFilePath, 'a'))) {
+        if (($this->_fileHandle = fopen($this->_logFilePath, 'a')) && is_resource($this->_fileHandle)) {
             $this->_logStatus = self::STATUS_LOG_OPEN;
             $this->_messageQueue[] = $this->_messages['opensuccess'];
         } else {
@@ -207,7 +218,7 @@ class KLogger
      */
     public function logDebug($line, $args = self::NO_ARGUMENTS)
     {
-        $this->log($line, self::DEBUG);
+        $this->log($line, self::DEBUG,$args);
     }
 
     /**
@@ -352,12 +363,26 @@ class KLogger
     {
         if ($this->_severityThreshold >= $severity) {
             $status = $this->_getTimeLine($severity);
+            $debugBacktrace = debug_backtrace();
+            while ( $debugBacktrace[0]['class'] == 'KLogger' ) {
+                $last  = array_shift($debugBacktrace);
+            }   
+
+            if ( count($debugBacktrace) ) {
+                $info  = array_shift($debugBacktrace);
+            }   
+     
+            $class     = isset( $info['class'] )    ? $info['class']    : NULL;
+            $function  = isset( $info['function'] ) ? $info['function'] : NULL;
+            $file      = basename($info['file']);
             
-            $line = "$status $line";
+            $code_line = $last['line'];
+            
+            $line = "$status [$function()] $line [ $file:$code_line ] $line";
             
             if($args !== self::NO_ARGUMENTS) {
                 /* Print the passed object value */
-                $line = $line . '; ' . var_export($args, true);
+                $line .= '; ' . var_export($args, true);
             }
             
             $this->writeFreeFormLine($line . PHP_EOL);
